@@ -1,0 +1,96 @@
+version: '3'
+services:
+  nginx: 
+      build: ./load-balancer
+      tty: true
+      links:
+          - backend1
+          - backend2
+      ports:
+          - '8000:8080'
+  backend1:
+      build: ./back
+      tty: true
+      volumes:
+        - './back:/backend-dir-inside-container'
+        - './back/package.json:/backend-dir-inside-container/package.json'
+        - './back/package-lock.json:/backend-dir-inside-container/package-lock.json'
+      command: node server.js
+  backend2:
+      build: ./back
+      tty: true
+      volumes:
+        - './back:/backend-dir-inside-container'
+        - './back/package.json:/backend-dir-inside-container/package.json'
+        - './back/package-lock.json:/backend-dir-inside-container/package-lock.json'
+      command: node server.js
+  frontend:
+      build: ./front
+      tty: true
+      volumes:
+        - './front:/frontend-dir-inside-container'
+        - './front/package.json:/frontend-dir-inside-container/package.json'
+        - './front/package-lock.json:/frontend-dir-inside-container/package-lock.json'
+      command: npm start
+      ports:
+          - '3000:3000'
+      environment:
+        - API_URL=${API_URL}
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: api.Dockerfile
+  #   command: python manage.py runserver 0.0.0.0:6969
+  #   volumes:
+  #     - ./api/:/api
+  #   ports:
+  #     - "6969:6969"
+#  load-balancer:
+#    build:
+#      context: .
+#      dockerfile: load-balancer.Dockerfile
+#    image: appswhat-load-balancer
+#    depends_on:
+#      - server-a
+#      - server-b
+#    healthcheck:
+#      test: curl -f http://localhost:8008 || exit 1
+#      retries: 5
+#    network_mode: 'host'
+#    restart: on-failure
+#    volumes:
+#      - ./load-balancer:/load-balancer
+#      - /load-balancer/node_modules
+#  server-a:
+#    build:
+#      context: .
+#      dockerfile: server.Dockerfile
+#    image: appswhat-server
+#    depends_on:
+#      - redis
+#    ports:
+#      - '8080:8080'
+#    restart: on-failure
+#    volumes:
+#      - ./server:/server
+#      - /server/node_modules
+#  server-b:
+#    build:
+#      context: .
+#      dockerfile: server.Dockerfile
+#    image: appswhat-server
+#    depends_on:
+#      - redis
+#    environment:
+#      - PORT=8081
+#    expose:
+#      - '8081'
+#    ports:
+#      - '8081:8081'
+#    restart: on-failure
+#  redis:
+#    image: redis
+#  mongo:
+#    image: mongo
+#    ports:
+#      - '27017:27017'
